@@ -1,0 +1,6 @@
+{
+  "name": "Aviaography | Paul Brown Aviation Photography",
+  "description": "High-resolution aviation, airshow, military flightline, and airport photography portfolio by Paul Brown, former RAF engineer. Featuring RIAT, military fast jets, Heathrow, and comprehensive back-end CMS.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
