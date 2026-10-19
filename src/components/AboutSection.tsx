@@ -34,7 +34,7 @@ export const AboutSection: React.FC = () => {
               />
               <div className="p-4 bg-neutral-900/90 border-t border-neutral-800">
                 <p className="text-sm font-semibold text-white">Paul Brown</p>
-                <p className="text-xs text-neutral-400 mt-0.5">West Yorkshire, United Kingdom</p>
+                <p className="text-xs text-neutral-400 mt-0.5">London, England</p>
                 <div className="flex items-center gap-2 mt-2 pt-2 border-t border-neutral-800 text-[11px] text-amber-400">
                   <Award className="w-3.5 h-3.5 shrink-0" />
                   <span>Societies of Photographers Gold Awards</span>

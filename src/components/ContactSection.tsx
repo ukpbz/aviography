@@ -53,7 +53,7 @@ export const ContactSection: React.FC = () => {
             <div>
               <h3 className="text-sm font-semibold text-white mb-1">Direct Correspondence</h3>
               <p className="text-xs text-neutral-400 leading-relaxed">
-                Direct messages reach Paul Brown in West Yorkshire. Inquiries are typically reviewed within 24–48 hours.
+                Direct messages reach Paul Brown in London, England. Inquiries are typically reviewed within 24–48 hours.
               </p>
             </div>
 
@@ -75,7 +75,7 @@ export const ContactSection: React.FC = () => {
                 <MapPin className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
                 <div>
                   <span className="text-[11px] text-neutral-500 uppercase tracking-wider block">Base Location</span>
-                  <span>Bingley, West Yorkshire, United Kingdom</span>
+                  <span>London, England</span>
                 </div>
               </div>
 
