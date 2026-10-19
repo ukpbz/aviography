@@ -19,7 +19,10 @@ import {
   ArrowLeft,
   Sparkles,
   AlertTriangle,
-  Upload
+  Upload,
+  UploadCloud,
+  FileText,
+  CheckSquare
 } from 'lucide-react';
 import { usePhotos } from '../context/PhotoContext';
 import { Photo, Category } from '../types';
@@ -38,6 +41,7 @@ export const CMSPortal: React.FC<CMSPortalProps> = ({ onClose }) => {
     logoutAdmin,
     updateCredentials,
     addPhoto,
+    bulkAddPhotos,
     updatePhoto,
     deletePhoto,
     addCategory,
@@ -53,7 +57,40 @@ export const CMSPortal: React.FC<CMSPortalProps> = ({ onClose }) => {
   const [loginError, setLoginError] = useState('');
 
   // Active CMS tab
-  const [cmsTab, setCmsTab] = useState<'overview' | 'photos' | 'add' | 'categories' | 'security'>('overview');
+  const [cmsTab, setCmsTab] = useState<'overview' | 'photos' | 'add' | 'bulk' | 'categories' | 'security'>('overview');
+
+  // Bulk Upload state
+  interface BulkStagedItem {
+    tempId: string;
+    src: string;
+    filename: string;
+    title: string;
+    category: string;
+    categoryName: string;
+    tag: string;
+    location: string;
+    description: string;
+    camera: string;
+    lens: string;
+    shutter: string;
+    aperture: string;
+    iso: string;
+    featured: boolean;
+    width: number;
+    height: number;
+    fileSize: number;
+  }
+  const [bulkStagedPhotos, setBulkStagedPhotos] = useState<BulkStagedItem[]>([]);
+  const [batchCategory, setBatchCategory] = useState<string>('aircraft');
+  const [batchLocation, setBatchLocation] = useState<string>('London Heathrow Airport (LHR)');
+  const [batchTag, setBatchTag] = useState<string>('Airliner');
+  const [batchCamera, setBatchCamera] = useState<string>('Canon EOS Professional');
+  const [batchLens, setBatchLens] = useState<string>('Canon EF 100-400mm f/4.5-5.6L IS');
+  const [batchShutter, setBatchShutter] = useState<string>('1/1600s');
+  const [batchAperture, setBatchAperture] = useState<string>('f/6.3');
+  const [batchIso, setBatchIso] = useState<string>('ISO 200');
+  const [batchUrlsInput, setBatchUrlsInput] = useState<string>('');
+  const [isBulkDragging, setIsBulkDragging] = useState<boolean>(false);
 
   // Photo management state
   const [photoSearch, setPhotoSearch] = useState('');
@@ -212,6 +249,153 @@ export const CMSPortal: React.FC<CMSPortalProps> = ({ onClose }) => {
     setCmsTab('photos');
   };
 
+  const handleBulkFiles = (files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    const catObj = categories.find((c) => c.id === batchCategory);
+
+    fileArray.forEach((file) => {
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const src = e.target?.result as string;
+        const cleanTitle = file.name
+          .replace(/\.[^/.]+$/, '')
+          .replace(/[-_]+/g, ' ')
+          .trim();
+
+        const img = new Image();
+        img.onload = () => {
+          setBulkStagedPhotos((prev) => [
+            ...prev,
+            {
+              tempId: `bulk-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+              src,
+              filename: file.name,
+              title: cleanTitle || 'Untitled Photograph',
+              category: batchCategory,
+              categoryName: catObj?.name || 'Aircraft',
+              tag: batchTag || 'Airliner',
+              location: batchLocation || 'United Kingdom',
+              description: `Original full-resolution aviation capture from bulk upload.`,
+              camera: batchCamera,
+              lens: batchLens,
+              shutter: batchShutter,
+              aperture: batchAperture,
+              iso: batchIso,
+              featured: false,
+              width: img.naturalWidth || 1920,
+              height: img.naturalHeight || 1280,
+              fileSize: file.size
+            }
+          ]);
+        };
+        img.src = src;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleAddBatchUrls = () => {
+    const urls = batchUrlsInput
+      .split('\n')
+      .map((u) => u.trim())
+      .filter((u) => u.length > 5);
+
+    if (urls.length === 0) {
+      showNotification('Please enter at least one valid image URL');
+      return;
+    }
+    const catObj = categories.find((c) => c.id === batchCategory);
+
+    const newItems: BulkStagedItem[] = urls.map((url, i) => {
+      const rawName = url.split('/').pop()?.split('?')[0] || `photo_${i + 1}.jpg`;
+      const cleanTitle = rawName
+        .replace(/\.[^/.]+$/, '')
+        .replace(/[-_]+/g, ' ')
+        .trim();
+
+      return {
+        tempId: `bulk-url-${Date.now()}-${i}`,
+        src: url,
+        filename: rawName,
+        title: cleanTitle || `Aviation Photo ${i + 1}`,
+        category: batchCategory,
+        categoryName: catObj?.name || 'Aircraft',
+        tag: batchTag || 'Airliner',
+        location: batchLocation || 'United Kingdom',
+        description: `Archival aviation photograph imported via batch URL.`,
+        camera: batchCamera,
+        lens: batchLens,
+        shutter: batchShutter,
+        aperture: batchAperture,
+        iso: batchIso,
+        featured: false,
+        width: 1920,
+        height: 1280,
+        fileSize: 350000
+      };
+    });
+
+    setBulkStagedPhotos((prev) => [...prev, ...newItems]);
+    setBatchUrlsInput('');
+    showNotification(`Added ${newItems.length} photos to staging queue`);
+  };
+
+  const handleApplyBatchSettings = () => {
+    const catObj = categories.find((c) => c.id === batchCategory);
+    setBulkStagedPhotos((prev) =>
+      prev.map((item) => ({
+        ...item,
+        category: batchCategory,
+        categoryName: catObj?.name || item.categoryName,
+        location: batchLocation,
+        tag: batchTag,
+        camera: batchCamera,
+        lens: batchLens,
+        shutter: batchShutter,
+        aperture: batchAperture,
+        iso: batchIso
+      }))
+    );
+    showNotification(`Applied batch settings to ${bulkStagedPhotos.length} staged photos`);
+  };
+
+  const handleCommitBulkUpload = () => {
+    if (bulkStagedPhotos.length === 0) {
+      showNotification('No photos staged for upload');
+      return;
+    }
+
+    bulkAddPhotos(
+      bulkStagedPhotos.map((item) => ({
+        title: item.title,
+        filename: item.filename,
+        category: item.category,
+        categoryName: item.categoryName,
+        tag: item.tag,
+        src: item.src,
+        width: item.width,
+        height: item.height,
+        location: item.location,
+        year: new Date().getFullYear().toString(),
+        description: item.description,
+        featured: item.featured,
+        camera: item.camera,
+        lens: item.lens,
+        exif: {
+          shutter: item.shutter,
+          aperture: item.aperture,
+          iso: item.iso,
+          focalLength: '300mm'
+        },
+        fileSize: item.fileSize
+      }))
+    );
+
+    setBulkStagedPhotos([]);
+    setCmsTab('photos');
+  };
+
   const handleCreateCategory = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategoryName.trim()) return;
@@ -242,7 +426,7 @@ export const CMSPortal: React.FC<CMSPortalProps> = ({ onClose }) => {
               <Lock className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold font-display text-white">Aviaography CMS Studio</h2>
+              <h2 className="text-lg font-bold font-display text-white">Aviography CMS Studio</h2>
               <p className="text-xs text-neutral-400">Secure Content Management Authentication</p>
             </div>
           </div>
@@ -332,7 +516,7 @@ export const CMSPortal: React.FC<CMSPortalProps> = ({ onClose }) => {
           <div className="h-4 w-px bg-neutral-700" />
 
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold font-display text-white">Aviaography CMS Studio</span>
+            <span className="text-sm font-bold font-display text-white">Aviography CMS Studio</span>
             <span className="hidden sm:inline-block text-[11px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
               Admin: {adminCredentials.username}
             </span>
@@ -394,7 +578,24 @@ export const CMSPortal: React.FC<CMSPortalProps> = ({ onClose }) => {
           }`}
         >
           <Plus className="w-4 h-4" />
-          <span>Add New Photograph</span>
+          <span>Add Single Photograph</span>
+        </button>
+
+        <button
+          onClick={() => setCmsTab('bulk')}
+          className={`flex items-center gap-2 px-4 py-3 text-xs font-medium border-b-2 whitespace-nowrap transition-colors ${
+            cmsTab === 'bulk'
+              ? 'border-amber-400 text-amber-400 font-semibold'
+              : 'border-transparent text-neutral-400 hover:text-neutral-200'
+          }`}
+        >
+          <UploadCloud className="w-4 h-4" />
+          <span>Bulk Photo Upload</span>
+          {bulkStagedPhotos.length > 0 && (
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-400 text-neutral-950 font-bold">
+              {bulkStagedPhotos.length}
+            </span>
+          )}
         </button>
 
         <button
@@ -913,6 +1114,299 @@ export const CMSPortal: React.FC<CMSPortalProps> = ({ onClose }) => {
                 <span>Publish Photograph to Catalog</span>
               </button>
             </form>
+          </div>
+        )}
+
+        {/* TAB 3B: BULK PHOTO UPLOAD */}
+        {cmsTab === 'bulk' && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-neutral-900 border border-neutral-800">
+              <div>
+                <h2 className="text-base font-bold font-display text-white flex items-center gap-2">
+                  <UploadCloud className="w-5 h-5 text-amber-400" />
+                  <span>Bulk Photograph Upload & Batch Staging</span>
+                </h2>
+                <p className="text-xs text-neutral-400 mt-1">
+                  Upload multiple image files simultaneously or import multiple image URLs in one batch.
+                </p>
+              </div>
+
+              {bulkStagedPhotos.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setBulkStagedPhotos([])}
+                    className="px-3 py-1.5 text-xs text-neutral-400 hover:text-rose-400 bg-neutral-950 border border-neutral-800 rounded-lg transition-colors"
+                  >
+                    Clear Queue
+                  </button>
+                  <button
+                    onClick={handleCommitBulkUpload}
+                    className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-neutral-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors shadow-md"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>Import All ({bulkStagedPhotos.length}) to Catalog</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Dropzone & Import Methods Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Multi-file Dropzone */}
+              <div className="lg:col-span-7">
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsBulkDragging(true);
+                  }}
+                  onDragLeave={() => setIsBulkDragging(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsBulkDragging(false);
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                      handleBulkFiles(e.dataTransfer.files);
+                    }
+                  }}
+                  className={`p-8 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center transition-all ${
+                    isBulkDragging
+                      ? 'border-amber-400 bg-amber-500/10'
+                      : 'border-neutral-700 bg-neutral-900/60 hover:border-neutral-500'
+                  }`}
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-3">
+                    <UploadCloud className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-sm font-bold text-white mb-1">
+                    Drop Multiple Photograph Files Here
+                  </h3>
+                  <p className="text-xs text-neutral-400 max-w-sm mb-4">
+                    Select multiple JPEG, PNG, or WebP images from your device. Each file will be automatically parsed with natural dimensions.
+                  </p>
+                  <label className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-neutral-950 bg-amber-400 hover:bg-amber-300 rounded-xl cursor-pointer transition-colors shadow-md">
+                    <Upload className="w-4 h-4" />
+                    <span>Select Multiple Image Files</span>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          handleBulkFiles(e.target.files);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Batch URLs Textarea Input */}
+              <div className="lg:col-span-5 flex flex-col justify-between p-5 rounded-2xl bg-neutral-900 border border-neutral-800 space-y-3">
+                <div>
+                  <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-amber-400" />
+                    <span>Batch Image URLs Import</span>
+                  </h4>
+                  <p className="text-[11px] text-neutral-400 mt-1">
+                    Paste one image URL per line to stage web-hosted photographs:
+                  </p>
+                  <textarea
+                    rows={4}
+                    value={batchUrlsInput}
+                    onChange={(e) => setBatchUrlsInput(e.target.value)}
+                    placeholder="https://example.com/photos/a380_heathrow.jpg&#10;https://example.com/photos/f18_riat.jpg"
+                    className="mt-2 w-full p-2.5 text-xs bg-neutral-950 border border-neutral-800 focus:border-amber-500 rounded-lg text-white font-mono placeholder-neutral-600 focus:outline-none resize-none"
+                  />
+                </div>
+                <button
+                  onClick={handleAddBatchUrls}
+                  disabled={!batchUrlsInput.trim()}
+                  className="w-full py-2 text-xs font-semibold text-neutral-200 bg-neutral-800 hover:bg-neutral-700 disabled:opacity-40 rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Parse & Add URLs to Staging Queue</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Batch Defaults Configuration Card */}
+            <div className="p-5 rounded-2xl bg-neutral-900 border border-neutral-800 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-neutral-800 pb-3">
+                <div>
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                    Batch Metadata Defaults
+                  </h3>
+                  <p className="text-[11px] text-neutral-400">
+                    Apply consistent category, location, and camera settings across all staged photos.
+                  </p>
+                </div>
+                <button
+                  onClick={handleApplyBatchSettings}
+                  disabled={bulkStagedPhotos.length === 0}
+                  className="self-start sm:self-auto px-3.5 py-1.5 text-xs font-semibold text-neutral-950 bg-amber-400 hover:bg-amber-300 disabled:opacity-40 rounded-lg transition-colors"
+                >
+                  Apply Settings to All ({bulkStagedPhotos.length})
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-xs">
+                <div>
+                  <label className="block text-neutral-400 mb-1">Target Category</label>
+                  <select
+                    value={batchCategory}
+                    onChange={(e) => setBatchCategory(e.target.value)}
+                    className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 focus:border-amber-500 rounded-lg text-white"
+                  >
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-neutral-400 mb-1">Location</label>
+                  <input
+                    type="text"
+                    value={batchLocation}
+                    onChange={(e) => setBatchLocation(e.target.value)}
+                    placeholder="e.g. London Heathrow Airport (LHR)"
+                    className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 focus:border-amber-500 rounded-lg text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-neutral-400 mb-1">Subject / Tag</label>
+                  <input
+                    type="text"
+                    value={batchTag}
+                    onChange={(e) => setBatchTag(e.target.value)}
+                    placeholder="e.g. Airbus A380 / Fast Jet"
+                    className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 focus:border-amber-500 rounded-lg text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-neutral-400 mb-1">Camera Body</label>
+                  <input
+                    type="text"
+                    value={batchCamera}
+                    onChange={(e) => setBatchCamera(e.target.value)}
+                    placeholder="Canon EOS Professional"
+                    className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Staging Queue Review */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs text-neutral-400 px-1">
+                <span className="font-semibold text-white">
+                  Staging Queue ({bulkStagedPhotos.length} Photographs Ready)
+                </span>
+                {bulkStagedPhotos.length > 0 && (
+                  <span className="text-[11px] text-amber-400">
+                    Review and edit titles or categories before importing
+                  </span>
+                )}
+              </div>
+
+              {bulkStagedPhotos.length === 0 ? (
+                <div className="p-12 text-center rounded-2xl bg-neutral-900/40 border border-neutral-800/80">
+                  <UploadCloud className="w-10 h-10 text-neutral-600 mx-auto mb-3" />
+                  <p className="text-sm text-neutral-300 font-medium">Staging Queue is Currently Empty</p>
+                  <p className="text-xs text-neutral-500 mt-1">
+                    Drag and drop files above or select multiple images to batch stage photos for import.
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-neutral-800 bg-neutral-900 overflow-hidden divide-y divide-neutral-800/60 max-h-[500px] overflow-y-auto">
+                  {bulkStagedPhotos.map((item, idx) => (
+                    <div
+                      key={item.tempId}
+                      className="p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:bg-neutral-800/40 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <span className="text-[11px] font-mono text-neutral-500 w-5">
+                          {idx + 1}.
+                        </span>
+                        <img
+                          src={item.src}
+                          alt={item.title}
+                          className="w-14 h-10 object-cover rounded bg-neutral-950 shrink-0"
+                        />
+                        <div className="flex-1 sm:w-64">
+                          <input
+                            type="text"
+                            value={item.title}
+                            onChange={(e) => {
+                              const newTitle = e.target.value;
+                              setBulkStagedPhotos((prev) =>
+                                prev.map((p) => (p.tempId === item.tempId ? { ...p, title: newTitle } : p))
+                              );
+                            }}
+                            className="w-full px-2.5 py-1 text-xs bg-neutral-950 border border-neutral-800 focus:border-amber-500 rounded text-white font-medium"
+                          />
+                          <p className="text-[10px] text-neutral-500 font-mono mt-0.5 truncate">
+                            {item.filename} · {item.width}×{item.height}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                        <select
+                          value={item.category}
+                          onChange={(e) => {
+                            const catId = e.target.value;
+                            const catObj = categories.find((c) => c.id === catId);
+                            setBulkStagedPhotos((prev) =>
+                              prev.map((p) =>
+                                p.tempId === item.tempId
+                                  ? { ...p, category: catId, categoryName: catObj?.name || p.categoryName }
+                                  : p
+                              )
+                            );
+                          }}
+                          className="px-2.5 py-1 text-xs bg-neutral-950 border border-neutral-800 rounded text-white"
+                        >
+                          {categories.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+
+                        <button
+                          onClick={() =>
+                            setBulkStagedPhotos((prev) => prev.filter((p) => p.tempId !== item.tempId))
+                          }
+                          className="p-1.5 rounded text-neutral-400 hover:text-rose-400 hover:bg-neutral-800 transition-colors"
+                          title="Remove from queue"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Bottom Commit Button */}
+              {bulkStagedPhotos.length > 0 && (
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={handleCommitBulkUpload}
+                    className="flex items-center gap-2 px-6 py-3 text-xs font-bold text-neutral-950 bg-amber-400 hover:bg-amber-300 rounded-xl transition-all shadow-lg hover:shadow-amber-400/20"
+                  >
+                    <UploadCloud className="w-4 h-4" />
+                    <span>Confirm & Import All {bulkStagedPhotos.length} Photographs to Catalog</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

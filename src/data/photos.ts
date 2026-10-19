@@ -1,5 +1,5 @@
 /**
- * Aviaography UK (www.aviaography.co.uk)
+ * Aviography UK (www.aviaography.co.uk)
  * Dedicated Aviation Photography Catalog
  * Categories matching the original site exactly:
  * - Aircraft

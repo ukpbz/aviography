@@ -18,7 +18,7 @@ import { Photo } from '../types';
 
 export const Lightbox: React.FC = () => {
   const { activePhoto, setActivePhoto, photos, showNotification } = usePhotos();
-  const [showInfo, setShowInfo] = useState(true);
+  const [showInfo, setShowInfo] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
 
   // Find index of current photo
@@ -81,9 +81,6 @@ export const Lightbox: React.FC = () => {
           <span className="text-xs font-mono px-2 py-0.5 rounded bg-neutral-800 text-neutral-300">
             {currentIndex + 1} / {photos.length}
           </span>
-          <span className="text-sm font-medium text-neutral-200 truncate max-w-xs sm:max-w-md">
-            {activePhoto.title}
-          </span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -141,7 +138,7 @@ export const Lightbox: React.FC = () => {
 
           {/* Discreet copyright stamp */}
           <div className="absolute bottom-3 right-3 pointer-events-none px-2.5 py-1 rounded bg-black/70 backdrop-blur-xs text-[11px] font-medium tracking-wide text-neutral-300/80">
-            © Paul Brown · Aviaography.co.uk
+            © Paul Brown · Aviography.co.uk
           </div>
 
           {/* Transparent security click-shield over the photo */}

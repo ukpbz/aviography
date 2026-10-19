@@ -62,7 +62,7 @@ export const AboutSection: React.FC = () => {
             <div className="p-5 rounded-xl border border-neutral-800 bg-neutral-900/40">
               <h3 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
                 <Plane className="w-4 h-4 text-amber-400" />
-                The Aviaography Philosophy
+                The Aviography Philosophy
               </h3>
               <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed">
                 "Whether tracking a supersonic Eurofighter Typhoon at RIAT Fairford or framing an airliner on short final into Heathrow, aviation photography is about anticipation, aerodynamic appreciation, and respecting the machine in its element."

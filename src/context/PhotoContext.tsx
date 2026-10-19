@@ -17,6 +17,7 @@ interface PhotoContextType {
   logoutAdmin: () => void;
   updateCredentials: (newUsername: string, newPassword: string) => boolean;
   addPhoto: (photo: Omit<Photo, 'id'>) => Photo;
+  bulkAddPhotos: (photos: Omit<Photo, 'id'>[]) => Photo[];
   updatePhoto: (id: string, updates: Partial<Photo>) => boolean;
   deletePhoto: (id: string) => boolean;
   addCategory: (category: Omit<Category, 'id'>) => Category;
@@ -27,10 +28,10 @@ interface PhotoContextType {
   showNotification: (msg: string) => void;
 }
 
-const STORAGE_KEY_PHOTOS = 'aviaography_photos_catalog_v4_aviation_exclusive';
-const STORAGE_KEY_CATEGORIES = 'aviaography_categories_catalog_v4_aviation_exclusive';
-const STORAGE_KEY_AUTH = 'aviaography_admin_credentials_v4';
-const STORAGE_KEY_SESSION = 'aviaography_admin_session_v4';
+const STORAGE_KEY_PHOTOS = 'aviography_photos_catalog_v5';
+const STORAGE_KEY_CATEGORIES = 'aviography_categories_catalog_v5';
+const STORAGE_KEY_AUTH = 'aviography_admin_credentials_v5';
+const STORAGE_KEY_SESSION = 'aviography_admin_session_v5';
 
 const DEFAULT_CREDENTIALS: AdminCredentials = {
   username: 'admin',
@@ -85,7 +86,7 @@ export const PhotoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   });
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>('gallery');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('home');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [activePhoto, setActivePhoto] = useState<Photo | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
@@ -133,7 +134,7 @@ export const PhotoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const loginAdmin = (user: string, pass: string): boolean => {
     if (user.trim() === adminCredentials.username && pass === adminCredentials.passwordHash) {
       setIsAdminAuthenticated(true);
-      showNotification('Signed in to Aviaography CMS Studio');
+      showNotification('Signed in to Aviography CMS Studio');
       return true;
     }
     return false;
@@ -166,6 +167,18 @@ export const PhotoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setPhotos((prev) => [newPhoto, ...prev]);
     showNotification(`Added "${newPhoto.title}" to ${newPhoto.categoryName}`);
     return newPhoto;
+  };
+
+  const bulkAddPhotos = (photosData: Omit<Photo, 'id'>[]): Photo[] => {
+    const timestamp = Date.now();
+    const newPhotos: Photo[] = photosData.map((p, idx) => ({
+      ...p,
+      id: `photo-bulk-${timestamp}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+      createdAt: new Date().toISOString()
+    }));
+    setPhotos((prev) => [...newPhotos, ...prev]);
+    showNotification(`Successfully imported ${newPhotos.length} photos to catalog`);
+    return newPhotos;
   };
 
   const updatePhoto = (id: string, updates: Partial<Photo>): boolean => {
@@ -248,6 +261,7 @@ export const PhotoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         logoutAdmin,
         updateCredentials,
         addPhoto,
+        bulkAddPhotos,
         updatePhoto,
         deletePhoto,
         addCategory,

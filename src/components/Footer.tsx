@@ -21,7 +21,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenCMS }) => {
           <div className="md:col-span-2 space-y-3">
             <div className="flex items-center gap-2 text-white font-bold font-display text-lg">
               <Plane className="w-5 h-5 text-amber-400 rotate-45" />
-              <span>Aviaography</span>
+              <span>Aviography</span>
               <span className="text-xs text-neutral-500 font-mono font-normal">.co.uk</span>
             </div>
             <p className="text-xs text-neutral-400 max-w-md leading-relaxed">
@@ -124,6 +124,17 @@ export const Footer: React.FC<FooterProps> = ({ onOpenCMS }) => {
               <li>
                 <button
                   onClick={() => {
+                    setActiveTab('home');
+                    scrollToTop();
+                  }}
+                  className="hover:text-amber-400 transition-colors"
+                >
+                  Home (Full-Screen Showcase)
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
                     setActiveTab('about');
                     scrollToTop();
                   }}
@@ -158,7 +169,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenCMS }) => {
 
         {/* Quiet copyright & back to top */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500">
-          <p>© {new Date().getFullYear()} Paul Brown · Aviaography. All photographs copyright protected.</p>
+          <p>© {new Date().getFullYear()} Paul Brown · Aviography. All photographs copyright protected.</p>
           <div className="flex items-center gap-4">
             <button
               onClick={scrollToTop}

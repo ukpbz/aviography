@@ -36,7 +36,7 @@ export const ContactSection: React.FC = () => {
           <div className="flex items-center justify-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">
             <span>Get in Touch</span>
             <span aria-hidden="true">·</span>
-            <span>Aviaography UK</span>
+            <span>Aviography UK</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold font-display text-white tracking-tight">
             Contact Paul Brown
@@ -90,7 +90,7 @@ export const ContactSection: React.FC = () => {
 
             <div className="p-4 rounded-xl bg-neutral-950/60 border border-neutral-800 text-[11px] text-neutral-400 leading-relaxed">
               <strong className="text-neutral-200 block mb-1">Image Rights & Licensing:</strong>
-              All aerial, airshow, and flightline images on Aviaography are copyright Paul Brown. Commercial and editorial
+              All aerial, airshow, and flightline images on Aviography are copyright Paul Brown. Commercial and editorial
               licensing requests should specify target media and print dimensions.
             </div>
           </div>

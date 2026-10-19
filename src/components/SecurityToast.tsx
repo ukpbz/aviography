@@ -16,11 +16,11 @@ export const SecurityToast: React.FC = () => {
       // Ctrl+U (View Source)
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
         e.preventDefault();
-        showNotification('🔒 Aviaography Protection: Source inspection restricted.');
+        showNotification('🔒 Aviography Protection: Source inspection restricted.');
       }
       // F12 or PrintScreen intercept note
       if (e.key === 'PrintScreen') {
-        showNotification('Notice: Aviaography photographs are protected under copyright law.');
+        showNotification('Notice: Aviography photographs are protected under copyright law.');
       }
     };
 

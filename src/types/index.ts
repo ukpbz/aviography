@@ -47,4 +47,14 @@ export interface AdminCredentials {
 
 export type ViewMode = 'grid' | 'masonry' | 'fullscreen-slide';
 
-export type ActiveTab = 'gallery' | 'aviation' | 'categories' | 'about' | 'contact' | 'cms';
+export type ActiveTab = 'home' | 'gallery' | 'about' | 'contact' | 'cms';
+
+export interface HomepageSlide {
+  id: string;
+  title: string;
+  src: string;
+  location: string;
+  tag: string;
+  aircraft: string;
+  resolution: string;
+}

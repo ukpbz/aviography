@@ -46,7 +46,7 @@ export const ImageShield: React.FC<ImageShieldProps> = ({
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-neutral-900 text-neutral-400 p-4 text-center">
           <Camera className="w-8 h-8 mb-2 text-neutral-600" />
           <span className="text-xs font-medium text-neutral-400">{alt}</span>
-          <span className="text-[11px] text-neutral-500 mt-1">Aviaography Original Archive</span>
+          <span className="text-[11px] text-neutral-500 mt-1">Aviography Original Archive</span>
         </div>
       ) : (
         <>
@@ -71,10 +71,10 @@ export const ImageShield: React.FC<ImageShieldProps> = ({
             }`}
           />
 
-          {/* Optional Discrete Watermark */}
+          {/* Copyright Stamp at Bottom Right */}
           {showWatermark && (
-            <div className="absolute bottom-2 right-3 pointer-events-none z-10 px-2 py-0.5 rounded bg-black/60 backdrop-blur-xs text-[10px] tracking-wider uppercase font-medium text-white/70">
-              © Paul Brown · Aviaography
+            <div className="absolute bottom-2.5 right-3 pointer-events-none z-10 px-2.5 py-1 rounded-md bg-black/70 border border-white/10 backdrop-blur-xs text-[10px] sm:text-[11px] font-mono tracking-wide text-neutral-200/95 shadow-md">
+              © Paul Brown · Aviography.co.uk
             </div>
           )}
 

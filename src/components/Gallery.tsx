@@ -19,7 +19,7 @@ import { ImageShield } from './ImageShield';
 import { Photo } from '../types';
 
 export const Gallery: React.FC = () => {
-  const { photos, categories, selectedCategory, setSelectedCategory, setActivePhoto } = usePhotos();
+  const { photos, categories, selectedCategory, setSelectedCategory, setActivePhoto, setActiveTab } = usePhotos();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [layoutMode, setLayoutMode] = useState<'bento' | 'grid'>('bento');
@@ -66,6 +66,20 @@ export const Gallery: React.FC = () => {
   return (
     <section id="gallery-view" className="py-8 scroll-mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Navigation Breadcrumb back to Fullscreen Home */}
+        <div className="flex items-center gap-2 text-xs text-neutral-400 mb-3">
+          <button
+            onClick={() => setActiveTab('home')}
+            className="hover:text-amber-400 transition-colors flex items-center gap-1 cursor-pointer"
+          >
+            <span>Home</span>
+          </button>
+          <span className="text-neutral-600">/</span>
+          <span className="text-amber-400 font-medium">
+            {selectedCategory === 'all' ? 'All Collections' : activeCategoryObj?.name}
+          </span>
+        </div>
+
         {/* Gallery Header and Category Switcher */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-neutral-800">
           <div>
@@ -229,58 +243,24 @@ export const Gallery: React.FC = () => {
                 <div
                   key={photo.id}
                   onClick={() => setActivePhoto(photo)}
-                  className={`group relative flex flex-col rounded-xl overflow-hidden border border-neutral-800/80 bg-neutral-900/60 hover:border-neutral-700 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer ${
+                  className={`group relative rounded-xl overflow-hidden border border-neutral-800/80 bg-neutral-900/60 hover:border-neutral-700 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 cursor-pointer ${
                     isHeroCard && layoutMode === 'bento' ? 'sm:col-span-2' : ''
                   }`}
                 >
-                  {/* Photo container with ImageShield copyright security */}
-                  <div className="relative overflow-hidden">
+                  {/* Pure Photo with ImageShield Copyright Protection at Bottom Right */}
+                  <div className="relative overflow-hidden w-full h-full">
                     <ImageShield
                       src={photo.src}
                       alt={photo.title}
                       aspectRatio={isHeroCard && layoutMode === 'bento' ? 'aspect-[16/9]' : 'aspect-[3/2]'}
                       showWatermark={true}
-                      className="group-hover:scale-103 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
                     />
 
-                    {/* Quick view button indicator on hover */}
+                    {/* Discreet hover zoom icon */}
                     <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-none p-1.5 rounded-lg bg-black/70 backdrop-blur-xs text-white">
                       <Maximize2 className="w-4 h-4" />
                     </div>
-
-                    {/* Category kicker label top left */}
-                    <div className="absolute top-3 left-3 pointer-events-none z-20 px-2 py-0.5 rounded bg-black/60 backdrop-blur-xs text-[11px] font-medium text-amber-300">
-                      {photo.categoryName}
-                    </div>
-                  </div>
-
-                  {/* Card Content - Clean unboxed text metadata with typographic separators */}
-                  <div className="p-4 flex flex-col justify-between flex-1">
-                    <div>
-                      <h3 className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors line-clamp-1">
-                        {photo.title}
-                      </h3>
-
-                      <div className="flex items-center gap-2 text-xs text-neutral-400 mt-1.5">
-                        <span className="flex items-center gap-1 truncate">
-                          <MapPin className="w-3 h-3 text-neutral-500 shrink-0" />
-                          <span className="truncate">{photo.location}</span>
-                        </span>
-                        {photo.tag && (
-                          <>
-                            <span aria-hidden="true" className="text-neutral-600">·</span>
-                            <span className="text-neutral-400 truncate">{photo.tag}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {photo.exif?.shutter && (
-                      <div className="mt-3 pt-2.5 border-t border-neutral-800/60 flex items-center justify-between text-[11px] font-mono text-neutral-500">
-                        <span>{photo.exif.shutter} · {photo.exif.aperture}</span>
-                        <span>{photo.exif.iso}</span>
-                      </div>
-                    )}
                   </div>
                 </div>
               );
